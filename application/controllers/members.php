@@ -4102,12 +4102,15 @@ class Members_Controller extends Controller
 				{
 					$member->type = Member_Model::TYPE_FORMER;
 					$member->locked = 1; // lock account
+				}
 				//get variable symbol id
 
-				$var_sym_id = $variable_symbol_model->get_variable_symbol_id_member($member->id);
-				$variable_symbol_model->delete_variable_symbol($var_sym_id);
+				$var_sym_id = $variable_symbol_model->get_id_variable_symbol_id_member($member->id);
+				$var_sym = $variable_symbol_model->get_variable_symbol_id_member($member->id);
+				$var_sym = "$var_sym+U";
+				$variable_symbol_model->update_variable_symbol($var_sym, $var_sym_id);
 
-				}
+				
 				
 				$member->save_throwable();
 				
