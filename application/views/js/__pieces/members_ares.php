@@ -1,7 +1,7 @@
 <?php
 /**
  * Members add.
- * 
+ *
  * @author Ondřej Fibich
  */
 
@@ -9,25 +9,25 @@
 if (FALSE): ?><script type="text/javascript"><?php endif
 
 ?>
-	
+
 	// on enable of VS generation, disable VS field
 	$('#variable_symbol_generate', context).change(function ()
 	{
 		if ($(this).is(':checked'))
 		{
-			$('#variable_symbol', context).attr('disabled', true);	
+			$('#variable_symbol', context).attr('disabled', true);
 		}
 		else
 		{
 			$('#variable_symbol', context).removeAttr('disabled').focus();
 		}
 	}).trigger('change');
-	
+
 	$("#organization_identifier").parent().append('<img id="load-from-ares-button" src="<?php echo url::base() ?>media/images/icons/reload.png" title="<?php echo __('Load data about member from ARES') ?>">');
-	
+
 	/**
 	 * Loads inputs from ARES data
-	 * 
+	 *
 	 * @author Michal Kliment
 	 * @param {type} parameters
 	 * @param {type} button
@@ -36,23 +36,37 @@ if (FALSE): ?><script type="text/javascript"><?php endif
 	function load_inputs_from_ares_data (parameters, button)
 	{
 		var loader = '<?php echo url::base() ?>media/images/icons/animations/ajax-loader.gif';
-		
+
 		if (button.attr('src') == loader)
 			return false; // waiting
-	
+
 		var oldSrc = button.attr('src');
 		button.attr('src', loader);
-		
+
 		$.getJSON('<?php echo url_lang::base() ?>/json/load_member_data_from_ares/', parameters, function (data)
 		{
 			if (data.state)
-			{				
+			{
 				$("#membername").val(data.name);
 				$("#partner_name").val(data.name);
 				$("#name").val(data.firstname);
 				$("#surname").val(data.lastname);
 				$("#organization_identifier").val(data.organization_identifier);
 				$("#vat_organization_identifier").val(data.vat_organization_identifier);
+
+				var exists = false;
+				$('#town_id option').each(function(){
+					if (this.value == data.town_id) {
+						exists = true;
+						return false;
+					}
+				});
+				if (!exists) {
+					$('#town_id').append($('<option>', {
+					    value: data.town_id,
+						text: data.town+', '+data.zip_code
+					}));
+				}
 
 				$("#town_id").val(data.town_id);
 				$("#town_id").trigger('change');
@@ -70,28 +84,28 @@ if (FALSE): ?><script type="text/javascript"><?php endif
 			{
 				alert (data.text);
 			}
-			
+
 			button.attr('src', oldSrc);
 		});
 	}
-	
+
 	$("#load-from-ares-button").live('click', function (){
-		
+
 		var organization_identifier = $("#organization_identifier").val();
 		var name = $("#membername").val();
 		var town_id = $("#town_id").val();
 		var $this = $(this);
-		
+
 		// organization identifier is set
 		if (organization_identifier != '')
-		{	
+		{
 			// try find data by organization identifier
 			load_inputs_from_ares_data ({'organization_identifier':organization_identifier}, $this);
 		}
 		else
 		{
 			// try find data by name and town
-			load_inputs_from_ares_data({'name':name, 'town_id':town_id}, $this);	
+			load_inputs_from_ares_data({'name':name, 'town_id':town_id}, $this);
 		}
-		
+
 	});
