@@ -1732,8 +1732,9 @@ class Json_Controller extends Controller
 
 	/**
 	 * Sends request to ARES API
+	 * The new API is REST from 2023
 	 *
-	 * @author Michal Kliment
+	 * @author Michal Kliment & Lukáš Dulík
 	 * @param type $type
 	 * @param type $params
 	 * @return type
@@ -1747,26 +1748,19 @@ class Json_Controller extends Controller
 		$url = 'https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/vyhledat' ;
 		switch ($type)
 		{
+			// find by name and optionally town
 			case 'standard':
-
-				//old
-				//$url = 'http://wwwinfo.mfcr.cz/cgi-bin/ares/darv_std.cgi?obchodni_firma=' .
 
 				$data["obchodniJmeno"] = $params['name'];
 
 				if (isset($params['town']))
 					$data["sidlo"] = array('textovaAdresa' => $params['town']);
-					//$url .= '&nazev_obce=' . urlencode($params['town']);
-
-				//$url .= '&diakritika=false&max_pocet=1&czk=utf';
-				//error_log(print_r($url, TRUE));
 
 				break;
 
+			// find by organization identifier
 			case 'basic':
 
-				//$url = 'http://wwwinfo.mfcr.cz/cgi-bin/ares/darv_bas.cgi?ico=' .
-				//		$params['organization_identifier'];
 				$data["ico"] = array($params['organization_identifier']);
 
 				break;
@@ -1778,7 +1772,6 @@ class Json_Controller extends Controller
 					'Unknown ARES request type'
 				);
 		}
-		error_log(print_r($data, TRUE));
 
 		$options = array(
 		  'http' => array(
@@ -1792,11 +1785,9 @@ class Json_Controller extends Controller
 		$context  = stream_context_create( $options );
 		$result = file_get_contents( $url, false, $context );
 
-		//$file = @file_get_contents($url);
 
 		if ($result)
 		{
-			//$xml = @simplexml_load_string($file);
 			$response = json_decode( $result );
 
 			if ($response)
@@ -1831,6 +1822,7 @@ class Json_Controller extends Controller
 	}
 	/**
 	 * Reads all the info from the decoded JSON array - adresses etc.
+	 * Saves it into our data structure - result variable
 	 *
 	 * @author Lukas Dulik
 	 * @param result $result // decoded json response
@@ -1926,19 +1918,22 @@ class Json_Controller extends Controller
 
 		$organization_identifier = $this->input->get('organization_identifier');
 
-		// organization identifier is set
+		// option 1) organization identifier is set
 
 		$req = array();
 		if ($organization_identifier != '')
 		{
 			$req['organization_identifier'] = $organization_identifier;
+
 			// find data by organization identifier
 			$result = $this->send_ares_request('basic', $req);
+			// check if the request was successful
 			$result = $this->check_ares_response($result);
 
 			// no error in request
 			if ($result['state'])
 			{
+				// the subject
 				$es = $result['data']->ekonomickeSubjekty[0];
 
 				// record was found
@@ -1954,7 +1949,8 @@ class Json_Controller extends Controller
 			}
 		}
 
-		// search by name and town
+		// option 2) search by name and town
+
 		else
 		{
 			$name = $this->input->get('name');
@@ -1969,6 +1965,7 @@ class Json_Controller extends Controller
 					$req['name'] = $name;
 					$req['town'] = $town->town;
 
+					// find data by name and town
 					$result = $this->send_ares_request('standard', $req);
 					$result = $this->check_ares_response($result);
 
@@ -1980,7 +1977,7 @@ class Json_Controller extends Controller
 					}
 				}
 
-				// record not found by name and town, try only by name
+				// option 3) record not found by name and town, try only by name
 				if (!$result['state'])
 				{
 					$req = array('name' => $name);
@@ -2080,6 +2077,7 @@ class Json_Controller extends Controller
 			unset($result['data']);
 		}
 
+		// send json response
 		die(json_encode($result));
 	}
 }
