@@ -1,0 +1,24 @@
+version: '3'
+services:
+  php:
+    build: .
+    ports:
+      - "9095:80"
+    volumes:
+      - .:/var/www/html
+  database:
+    image: mariadb:10.1
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: freenetis
+      MYSQL_USER: freenetis
+      MYSQL_PASSWORD: freenetis
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "9096:80"
+    environment:
+      PMA_HOST: database
+
