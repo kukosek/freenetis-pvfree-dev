@@ -2,28 +2,28 @@
 /*
  * This file is part of open source system FreenetIS
  * and it is released under GPLv3 licence.
- *
+ * 
  * More info about licence can be found:
  * http://www.gnu.org/licenses/gpl-3.0.html
- *
+ * 
  * More info about project can be found:
  * http://www.freenetis.org/
- *
+ * 
  */
 
 /**
- * Controller contains methods which are accessed by AJAX and returned as
- * JSON document.
- *
+ * Controller contains methods which are accessed by AJAX and returned as 
+ * JSON document. 
+ * 
  * @author	Michal Kliment
  * @package Controller
  */
 class Json_Controller extends Controller
 {
-
+	
 	/**
 	 * Send headers for JSON
-	 *
+	 * 
 	 * @author Ondřej Fibich
 	 */
 	public static function send_json_headers()
@@ -32,7 +32,7 @@ class Json_Controller extends Controller
 		@header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 		@header('Content-type: application/json');
 	}
-
+	
 	/**
 	 * 	Send headers for each function
 	 */
@@ -41,7 +41,7 @@ class Json_Controller extends Controller
 		parent::__construct();
 		//self::send_json_headers();
 	}
-
+	
 	/**
 	 * @see MY_Controller#is_preprocesor_enabled()
 	 */
@@ -49,11 +49,11 @@ class Json_Controller extends Controller
 	{
 		return FALSE;
 	}
-
+	
 	/**
 	 * Function to return accounts belong to account type. Returned array has
 	 * name of account as key and its ID as a value due to JSON eval order bug.
-	 *
+	 * 
 	 * @author Michal Kliment
 	 * @param number $origin_account_id
 	 */
@@ -61,10 +61,10 @@ class Json_Controller extends Controller
 	{
 		// access control
 		$origin_account = new Account_Model($origin_account_id);
-
+		
 		if ($origin_account->id == 0)
 			Controller::error(RECORD);
-
+		
 		if (!$this->acl_check_new('Accounts_Controller', 'transfers', $origin_account->member_id))
 			Controller::error(ACCESS);
 
@@ -75,7 +75,7 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_flip($accounts));
 	}
-
+	
 	/**
 	 * Returns address from address server
 	 *
@@ -89,7 +89,7 @@ class Json_Controller extends Controller
 			$result = $curl->fetch_url(Settings::get('address_point_url').server::query_string());
 
 			if ($curl->get_http_response_code() == 200 && $result !== FALSE)
-
+			
 			if ($result !== FALSE)
 			{
 				echo $result;
@@ -104,7 +104,7 @@ class Json_Controller extends Controller
 			json_encode(array());
 		}
 	}
-
+	
 	/**
 	 * Returns fee details in json format
 	 *
@@ -193,37 +193,37 @@ class Json_Controller extends Controller
 
 	/**
 	 * Callback AJAX funxtion to obtain MAC address from given IP and subnet.
-	 *
+	 * 
 	 * @author Ondřej Fibich
 	 */
 	public function obtain_mac_address()
 	{
 		$subnet_id = $this->input->get('subnet_id');
 		$ip_address = $this->input->get('ip_address');
-
+		
 		$ip_address_model = new Ip_address_Model();
-
+		
 		// find gateway of subnet
 		$gateway = $ip_address_model->get_gateway_of_subnet($subnet_id);
 
 		if ($gateway && $gateway->id && valid::ip($ip_address))
 		{
 			$mac_address = '';
-
+			
 			// first try CGI scripts
 			if (module::e('cgi'))
-			{
+			{	
 				$vars = arr::to_object(array
 				(
 					'GATEWAY_IP_ADDRESS'	=> $gateway->ip_address,
 					'IP_ADDRESS'			=> $ip_address
 				));
-
+				
 				$url = text::object_format($vars, Settings::get('cgi_arp_url'));
-
+				
 				$mac_address = trim(@file_get_contents($url));
 			}
-
+			
 			// now try SNMP
 			if (!valid::mac_address($mac_address) && module::e('snmp'))
 			{
@@ -252,7 +252,7 @@ class Json_Controller extends Controller
 					Log::add_exception($e);
 				}
 			}
-
+			
 			if (valid::mac_address($mac_address))
 			{
 				die(json_encode(array
@@ -301,7 +301,7 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($members));
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for VAT organization identifier
 	 *
@@ -331,9 +331,9 @@ class Json_Controller extends Controller
 	public function variable_symbol()
 	{
 		$term = $this->input->get('term');
-
+		
 		$variable_symbol_model = new Variable_Symbol_Model();
-
+		
 		$variable_symbols = $variable_symbol_model->like('variable_symbol', $term)
 				->orderby('variable_symbol')
 				->find_all()
@@ -361,7 +361,7 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($towns));
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for quarter name
 	 *
@@ -381,7 +381,7 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($towns));
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for ZIP code
 	 *
@@ -460,10 +460,10 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($users));
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for user fullname
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function user_fullname()
@@ -584,19 +584,19 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($contacts));
 	}
-
+	
 	/**
 	 * Performs action of mac_address_check jQuery form validator.
 	 * Checks whether the MAC is unique on subnet.
 	 *
-	 * @author Ondrej Fibich
+	 * @author Ondrej Fibich 
 	 */
 	public function mac_address_check()
 	{
 		$mac = trim($this->input->get('mac'));
 		$subnet = new Subnet_Model($this->input->get('subnet_id'));
 		$ip_address_id = $this->input->get('ip_address_id');
-
+		
 		if (!$subnet || !$subnet->id)
 		{
 			die(json_encode(array
@@ -605,7 +605,7 @@ class Json_Controller extends Controller
 				'message'	=> __('Subnet not exists.')
 			)));
 		}
-
+		
 		if ($subnet->is_mac_unique_in_subnet($mac, $ip_address_id))
 		{
 			die(json_encode(array('state' => true)));
@@ -616,10 +616,10 @@ class Json_Controller extends Controller
 					'/subnets/show/' . $subnet->id,
 					__('subnet', NULL, 1), 'target="_blank"'
 			);
-
+			
 			$m = 'MAC address of this interface is already in the '
 				. 'selected %s assigned to another interface';
-
+			
 			die(json_encode(array
 			(
 				'state'		=> false,
@@ -627,26 +627,26 @@ class Json_Controller extends Controller
 			)));
 		}
 	}
-
+	
 	/**
 	 * Performs action of ip_address_check jQuery form validator.
 	 *
-	 * @author Ondrej Fibich
+	 * @author Ondrej Fibich 
 	 */
 	public function ip_address_check()
 	{
 		$edit_id = intval($this->input->get('ip_address_id'));
 		$subnet_id = intval($this->input->get('subnet_id'));
 		$ip_str = trim($this->input->get('ip_address'));
-
+		
 		if (!$subnet_id && !$ip_str)
 		{
 			die(json_encode(array('state' => true)));
 		}
-
+		
 		$ip_model = new Ip_address_Model();
 		$subnet_model = new Subnet_Model($subnet_id);
-
+		
 		if (!$subnet_model || !$subnet_model->id)
 		{
 			die(json_encode(array
@@ -655,9 +655,9 @@ class Json_Controller extends Controller
 				'message'	=> __('Subnet not exists.')
 			)));
 		}
-
+		
 		$subnet = $subnet_model->get_net_and_mask_of_subnet();
-
+		
 		// checks mask
 		if (!valid::ip_check_subnet(ip2long($ip_str), $subnet->net + 0, ip2long($subnet->netmask)))
 		{
@@ -667,8 +667,8 @@ class Json_Controller extends Controller
 				'message'	=> __('IP address does not match the subnet/mask.')
 			)));
 		}
-
-		// checks if exists this ip in database
+		
+		// checks if exists this ip in database		
 		$ips = $ip_model->where(array
 		(
 			'ip_address'	=> $ip_str,
@@ -677,25 +677,25 @@ class Json_Controller extends Controller
 
 		foreach ($ips as $ip)
 		{
-			// only for edit: check if ip_address is not still same
+			// only for edit: check if ip_address is not still same 
 			if ($edit_id && ($edit_id == $ip->id))
 			{
 				continue;
 			}
-
+			
 			die(json_encode(array
 			(
 				'state'		=> false,
 				'message'	=> __('IP address already exists.')
 			)));
 		}
-
+		
 		echo json_encode(array('state' => true));
 	}
 
 	/**
 	 * Callback AJAX function to filter's whisper for iface MAC address
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function iface_mac()
@@ -715,7 +715,7 @@ class Json_Controller extends Controller
 
 	/**
 	 * Callback AJAX function to filter's whisper for link name
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function link_name()
@@ -735,7 +735,7 @@ class Json_Controller extends Controller
 
 	/**
 	 * Callback AJAX function to filter's whisper for device name
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function device_name()
@@ -755,7 +755,7 @@ class Json_Controller extends Controller
 
 	/**
 	 * Callback AJAX function to filter's whisper for subnet name
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function subnet_name()
@@ -775,7 +775,7 @@ class Json_Controller extends Controller
 
 	/**
 	 * Callback AJAX function to filter's whisper for device login
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function device_login()
@@ -795,7 +795,7 @@ class Json_Controller extends Controller
 
 	/**
 	 * Callback AJAX function to filter's whisper for device password
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function device_password()
@@ -815,7 +815,7 @@ class Json_Controller extends Controller
 
 	/**
 	 * Callback AJAX function to filter's whisper for device trade name
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function device_trade_name()
@@ -832,10 +832,10 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($devices));
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for country name
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function country_name()
@@ -852,10 +852,10 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($countries));
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for GPS
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function gps()
@@ -872,10 +872,10 @@ class Json_Controller extends Controller
 
 		echo json_encode($arr_gps);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for address point name
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function address_point_name()
@@ -892,7 +892,7 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($address_points));
 	}
-
+	
 	public function bank_account_name()
 	{
 		$term = $this->input->get('term');
@@ -907,16 +907,16 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($bank_accounts));
 	}
-
+	
 	/**
 	 * Callback AJAX function to return link by iface id
-	 *
+	 * 
 	 * @author Ondřej Fibich
 	 */
 	public function get_link_by_iface()
 	{
 		$iface = new Iface_Model($this->input->get('iface_id'));
-
+		
 		if ($iface->id && $iface->link_id)
 		{
 			$arr = $iface->link->as_array();
@@ -928,22 +928,22 @@ class Json_Controller extends Controller
 			die(json_encode(null));
 		}
 	}
-
+	
 	/**
 	 * Callback AJAX function to return iface and device that are connected
 	 * to given iface.
-	 *
+	 * 
 	 * @author Ondřej Fibich
 	 */
 	public function get_iface_and_device_connected_to_iface()
 	{
 		$iface = new Iface_Model($this->input->get('iface_id'));
 		$parent_iface = new Iface_Model($this->input->get('parent_iface_id'));
-
+		
 		if ($iface->id)
 		{
 			$connected_iface = $iface->get_iface_connected_to_iface();
-
+			
 			if ($connected_iface && (!$parent_iface->id || $parent_iface->id != $connected_iface->id))
 			{
 				die(json_encode(array
@@ -953,13 +953,13 @@ class Json_Controller extends Controller
 				)));
 			}
 		}
-
+		
 		die(json_encode(null));
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for SSID
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function ssid()
@@ -975,10 +975,10 @@ class Json_Controller extends Controller
 
 		echo json_encode(array_values($ssids));
 	}
-
+	
 	/**
 	 * Callback AJAX function for getting if device name
-	 *
+	 * 
 	 * @author Ondřej Fibich
 	 */
 	public function get_device_name()
@@ -1000,17 +1000,17 @@ class Json_Controller extends Controller
 			'name' => $device_id
 		)));
 	}
-
+	
 	/**
 	 * Callback AJAX function to get value of device template
-	 *
-	 * @author Ondřej Fibich
+	 * 
+	 * @author Ondřej Fibich 
 	 */
 	public function get_device_template_value()
 	{
 		$device_template_id = $this->input->get('device_template_id');
 		$device_template = new Device_template_Model($device_template_id);
-
+		
 		if ($device_template && $device_template->id)
 		{
 			echo $device_template->values;
@@ -1020,22 +1020,22 @@ class Json_Controller extends Controller
 			echo json_encode(array());
 		}
 	}
-
+	
 	/**
 	 * AJAX function for loading device template active links
-	 *
+	 * 
 	 * @author David Raška
 	 */
 	public function get_device_template_active_links()
 	{
 		$template_id = $this->input->get('template');
 		$device_active_link_model = new Device_active_link_Model();
-
+		
 		$templates = $device_active_link_model->get_device_active_links(
 				$template_id,
 				Device_active_link_Model::TYPE_TEMPLATE
 		)->result_array();
-
+		
 		if ($templates)
 		{
 			echo json_encode($templates);
@@ -1045,21 +1045,21 @@ class Json_Controller extends Controller
 			echo json_encode(array());
 		}
 	}
-
+	
 	/**
-	 * Callback AJAX function to get only device templates of choosen type of
+	 * Callback AJAX function to get only device templates of choosen type of 
 	 * device to dropdown
-	 *
-	 * @author Ondřej Fibich
+	 * 
+	 * @author Ondřej Fibich 
 	 */
 	public function get_device_templates_by_type()
 	{
 		$type = $this->input->get('type');
 		$device_template = new Device_template_Model();
-
+		
 		$types = $device_template->where('enum_type_id', $type)->orderby('name')->find_all();
 		$arr_types = array();
-
+		
 		foreach ($types as $type)
 		{
 			$arr_types[] = array
@@ -1069,13 +1069,13 @@ class Json_Controller extends Controller
 				'isDefault'	=> $type->default
 			);
 		}
-
+		
 		echo json_encode($arr_types);
 	}
-
+	
 	/**
 	 * Callback AJAX function to get only streets of choosen town to dropdown
-	 *
+	 * 
 	 * @author Ondřej Fibich
 	 */
 	public function get_streets_by_town()
@@ -1085,39 +1085,39 @@ class Json_Controller extends Controller
 		$streets = ORM::factory('street')
 				->where('town_id', $this->input->get('town_id'))
 				->select_list('street', 'id', 'street');
-
+		
 		echo json_encode($streets);
 	}
-
+	
 	/**
 	 * Gets suggestion for connecting one type of interface on location given by
 	 * member address point or by given GPS.
-	 *
+	 * 
 	 * @author Ondřej Fibich
-	 * @see Devices_Controller#add
+	 * @see Devices_Controller#add 
 	 */
 	public function get_suggestion_for_connecting_to()
 	{
 		// filter
 		$filter = new Filter_form();
 		$filter->autoload();
-
+		
 		// vars
 		$user_id = $this->input->get('user_id');
 		$gpsx = $this->input->get('gpsx');
 		$gpsy = $this->input->get('gpsy');
 		$wmode = $this->input->get('wmode');
 		$gps = array();
-
+		
 		if ($user_id)
 		{
 			if ($gpsx && $gpsy)
 			{
 				$gps = array('x' => $gpsx, 'y' => $gpsy);
 			}
-
+			
 			$im = new Iface_Model();
-
+			
 			echo json_encode(array
 			(
 				Iface_Model::TYPE_WIRELESS	=> $im->get_iface_for_connecting_to_iface(
@@ -1136,47 +1136,47 @@ class Json_Controller extends Controller
 			echo json_encode(array());
 		}
 	}
-
+	
 	/**
 	 * Returns all members in JSON format
-	 *
-	 * @author Michal Kliment
+	 * 
+	 * @author Michal Kliment 
 	 */
 	public function get_members()
 	{
 		$arr_members = array();
-
+		
 		$members = ORM::factory('member')
 				->get_all_members_to_dropdown();
-
+		
 		foreach ($members as $member)
 			$arr_members[] = arr::from_object($member);
-
+		
 		echo json_encode($arr_members);
 	}
-
+	
 	/**
 	 * Returns all devices of member in JSON format
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function get_devices()
 	{
 		$member_id = (int) $this->input->get('data');
-
-		$arr_devices = array();
+		
+		$arr_devices = array();		
 		$devices = ORM::factory('device')
 				->get_all_devices_by_member($member_id);
-
+		
 		foreach ($devices as $device)
 			$arr_devices[] = arr::from_object($device);
-
+		
 		echo json_encode($arr_devices);
 	}
-
+	
 	/**
 	 * Returns filtered devices in JSON format
-	 *
+	 * 
 	 * @author Ondřej Fibich
 	 * @see Device_Controller#add
 	 * @see Filter_form
@@ -1186,11 +1186,11 @@ class Json_Controller extends Controller
 		// filter
 		$filter = new Filter_form();
         $filter->autoload();
-
+		
 		// data
 		$dm = new Device_Model();
 		$devices = $dm->select_list_filtered_device_with_user($filter->as_sql());
-
+		
 		$out_devices = array();
 		foreach ($devices AS $user_name => $device)
 		{
@@ -1199,10 +1199,10 @@ class Json_Controller extends Controller
 		// output
 		echo json_encode($out_devices);
 	}
-
+	
 	/**
 	 * Returns all ifaces in in JSON format
-	 *
+	 * 
 	 * @author Michal Kliment, Ondrej Fibich
 	 */
 	public function get_ifaces()
@@ -1213,11 +1213,11 @@ class Json_Controller extends Controller
 		$ifaces = array();
 		$arr_ifaces = array();
 		$concat = 'CONCAT(IFNULL(mac, \'- \'),\': \',IFNULL(name,\'\'))';
-
+		
 		if ($device_id && is_numeric($itype))
 		{
 			$itypes = Iface_Model::get_can_connect_to($itype);
-
+			
 			if (count($itypes))
 			{
 				if (is_numeric($wmode) && ($itype == Iface_Model::TYPE_WIRELESS))
@@ -1231,7 +1231,7 @@ class Json_Controller extends Controller
 					{
 						$wmode = Iface_Model::WIRELESS_MODE_AP;
 					}
-
+					
 					$ifaces = ORM::factory('iface')
 						->where('device_id', $device_id)
 						->where('wireless_mode', $wmode)
@@ -1247,7 +1247,7 @@ class Json_Controller extends Controller
 				}
 			}
 		}
-
+		
 		foreach ($ifaces as $id => $name)
 		{
 			$arr_ifaces[] = array
@@ -1256,23 +1256,23 @@ class Json_Controller extends Controller
 				'name' => $name
 			);
 		}
-
+		
 		echo json_encode($arr_ifaces);
 	}
-
+	
 	/**
 	 * Function return address of given user
-	 *
+	 * 
 	 * @author David Raska
 	 */
 	public function get_user_address()
 	{
 		$user_id = (int) $this->input->get('user_id');
-
+		
 		if ($user_id)
 		{
 			$um = new User_Model($user_id);
-
+			
 			$result = array(
 				'country_id' => $um->member->address_point->country_id,
 				'town_id' => $um->member->address_point->town_id,
@@ -1283,10 +1283,10 @@ class Json_Controller extends Controller
 			echo json_encode($result);
 		}
 	}
-
+	
 	/**
 	 * Calculated additional of applicant
-	 *
+	 * 
 	 * @author Ondřej Fibich
 	 * @see Members_Controller#approve_applicant
 	 */
@@ -1295,7 +1295,7 @@ class Json_Controller extends Controller
 		$entrance_date = $this->input->get('entrance_date');
 		$connected_from = $this->input->get('connected_from');
 		$data = array('amount' => 0);
-
+		
 		if (preg_match('/^\d{4}\-\d{1,2}\-\d{1,2}$/', $entrance_date) !== FALSE &&
 			preg_match('/^\d{4}\-\d{1,2}\-\d{1,2}$/', $connected_from) !== FALSE &&
 			$entrance_date != '0000-00-00' &&
@@ -1304,21 +1304,21 @@ class Json_Controller extends Controller
 			$mf = new Members_fee_Model();
 			$data['amount'] = $mf->calculate_additional_payment_of_applicant($connected_from, $entrance_date);
 		}
-
+		
 		echo json_encode($data);
 	}
-
+	
 	/**
 	 * Prints all free IP addresses similar to given IP address
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function get_free_ip_addresses()
 	{
 		$ip_address = $this->input->get('term');
-
+		
 		$ip_address_model = new Ip_address_Model();
-
+		
 		try
 		{
 			$ip_addresses = $ip_address_model->get_free_ip_addresses($ip_address);
@@ -1327,7 +1327,7 @@ class Json_Controller extends Controller
 		{
 			$ip_addresses = array();
 		}
-
+		
 		echo json_encode($ip_addresses);
 	}
 
@@ -1339,17 +1339,17 @@ class Json_Controller extends Controller
 	public function invoice_name()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_names($term);
-
+		
 		$names = array();
 		foreach ($invoices as $invoice)
 			$names[] = $invoice->partner;
-
+		
 		echo json_encode($names);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for street
 	 *
@@ -1358,17 +1358,17 @@ class Json_Controller extends Controller
 	public function invoice_street()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_streets($term);
-
+		
 		$streets = array();
 		foreach ($invoices as $invoice)
 			$streets[] = $invoice->street;
-
+		
 		echo json_encode($streets);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for town
 	 *
@@ -1377,17 +1377,17 @@ class Json_Controller extends Controller
 	public function invoice_town()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_towns($term);
-
+		
 		$towns = array();
 		foreach ($invoices as $invoice)
 			$towns[] = $invoice->town;
-
+		
 		echo json_encode($towns);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for zip code
 	 *
@@ -1396,17 +1396,17 @@ class Json_Controller extends Controller
 	public function invoice_zip_code()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_zip_codes($term);
-
+		
 		$zip_codes = array();
 		foreach ($invoices as $invoice)
 			$zip_codes[] = $invoice->zip_code;
-
+		
 		echo json_encode($zip_codes);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for street name
 	 *
@@ -1415,17 +1415,17 @@ class Json_Controller extends Controller
 	public function invoice_street_number()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_street_numbers($term);
-
+		
 		$street_numbers = array();
 		foreach ($invoices as $invoice)
 			$street_numbers[] = $invoice->street_number;
-
+		
 		echo json_encode($street_numbers);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for company
 	 *
@@ -1434,17 +1434,17 @@ class Json_Controller extends Controller
 	public function invoice_company()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_companies($term);
-
+		
 		$companies = array();
 		foreach ($invoices as $invoice)
 			$companies[] = $invoice->partner_company;
-
+		
 		echo json_encode($companies);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for country
 	 *
@@ -1453,17 +1453,17 @@ class Json_Controller extends Controller
 	public function invoice_country()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_countries($term);
-
+		
 		$countries = array();
 		foreach ($invoices as $invoice)
 			$countries[] = $invoice->country;
-
+		
 		echo json_encode($countries);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for organization identifier
 	 *
@@ -1472,17 +1472,17 @@ class Json_Controller extends Controller
 	public function invoice_organization_id()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_organization_ids($term);
-
+		
 		$organization_ids = array();
 		foreach ($invoices as $invoice)
 			$organization_ids[] = $invoice->organization_identifier;
-
+		
 		echo json_encode($organization_ids);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for organization identifier
 	 *
@@ -1491,17 +1491,17 @@ class Json_Controller extends Controller
 	public function invoice_vat_organization_id()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_vat_organization_ids($term);
-
+		
 		$vat_organization_ids = array();
 		foreach ($invoices as $invoice)
 			$vat_organization_ids[] = $invoice->vat_organization_identifier;
-
+		
 		echo json_encode($vat_organization_ids);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for account number
 	 *
@@ -1510,17 +1510,17 @@ class Json_Controller extends Controller
 	public function invoice_account_nr()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_account_nrs($term);
-
+		
 		$account_nrs = array();
 		foreach ($invoices as $invoice)
 			$account_nrs[] = $invoice->account_nr;
-
+		
 		echo json_encode($account_nrs);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for phone number
 	 *
@@ -1529,17 +1529,17 @@ class Json_Controller extends Controller
 	public function invoice_phone_nr()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_phone_numbers($term);
-
+		
 		$phone_nrs = array();
 		foreach ($invoices as $invoice)
 			$phone_nrs[] = $invoice->phone_number;
-
+		
 		echo json_encode($phone_nrs);
 	}
-
+	
 	/**
 	 * Callback AJAX function to filter's whisper for email
 	 *
@@ -1548,31 +1548,31 @@ class Json_Controller extends Controller
 	public function invoice_email()
 	{
 		$term = $this->input->get('term');
-
+		
 		$invoice_model = new Invoice_Model();
 		$invoices = $invoice_model->get_all_emails($term);
-
+		
 		$emails = array();
 		foreach ($invoices as $invoice)
 			$emails[] = $invoice->email;
-
+		
 		echo json_encode($emails);
 	}
-
+	
 	/**
 	 * Callback AJAX funxtion to get device and iface to which is device connected.
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function get_connected_to_device_and_iface()
 	{
 		$subnet_id = $this->input->get('subnet_id');
 		$mac_address = $this->input->get('mac_address');
-
+		
 		$port_nr = 0;
-
+		
 		$ip_address_model = new Ip_address_Model();
-
+		
 		// find gateway of subnet
 		$gateway_ip_address = $ip_address_model
 			->where(array
@@ -1580,26 +1580,26 @@ class Json_Controller extends Controller
 				'subnet_id' => $subnet_id,
 				'gateway' => 1
 			))->find();
-
+		
 		// IP is on VLAN iface  => take physical (parent) interface
 		if ($gateway_ip_address->iface->type == Iface_Model::TYPE_VLAN)
 			$iface = $gateway_ip_address->iface->ifaces_relationships->current()->parent_iface;
 		// IP is on normal iface
 		else
 			$iface = $gateway_ip_address->iface;
-
+		
 		$device = $iface->device;
-
+		
 		$x = 100;
-
+		
 		while (true)
 		{
 			$x--;
-
+			
 			// unending loop protection
 			if ($x == 0)
 				break;
-
+			
 			// device is not connected to any device or is not connected to any association device
 			if ($iface->get_iface_connected_to_iface() === NULL ||
 				$iface->get_iface_connected_to_iface()->device->user->member_id != Member_Model::ASSOCIATION)
@@ -1607,14 +1607,14 @@ class Json_Controller extends Controller
 				// we end
 				break;
 			}
-
+			
 			// take device to which is our device connected
 			$device = $iface->get_iface_connected_to_iface()->device;
-
+			
 			// find IP address of device
 			$ip_address = $ip_address_model
 				->get_ip_addresses_of_device($device->id)->current();
-
+			
 			# only for switch
 			if ($device->has_ports() && $ip_address)
 			{
@@ -1658,7 +1658,7 @@ class Json_Controller extends Controller
 			else
 			{
 				$found = FALSE;
-
+				
 				// for each ifaces of device
 				foreach ($device->ifaces as $device_iface)
 				{
@@ -1667,13 +1667,13 @@ class Json_Controller extends Controller
 						&& $device_iface->get_iface_connected_to_iface()->id != $iface->id)
 					{
 						$iface = $device_iface;
-
+						
 						$found = TRUE;
-
+						
 						break;
 					}
 				}
-
+				
 				// this device has not any iface to which we can connect
 				if (!$found)
 				{
@@ -1685,22 +1685,22 @@ class Json_Controller extends Controller
 				}
 			}
 		}
-
+		
 		// we know port number which is not im db
 		if ($device->id && $port_nr && $iface->device_id != $device->id)
-		{
+		{	
 			// try create it
 			try
 			{
 				$iface->transaction_start();
-
+				
 				$iface->clear();
 				$iface->type = Iface_Model::TYPE_PORT;
 				$iface->device_id = $device->id;
 				$iface->number = $port_nr;
 				$iface->name = __('Port').' '.$port_nr;
 				$iface->save_throwable();
-
+				
 				$iface->transaction_commit();
 			}
 			catch (Exception $e)
@@ -1708,7 +1708,7 @@ class Json_Controller extends Controller
 				$iface->transaction_rollback();
 			}
 		}
-
+		
 		// success, return device and iface
 		if ($device->id && $iface->id)
 		{
@@ -1729,10 +1729,11 @@ class Json_Controller extends Controller
 			)));
 		}
 	}
-
+	
 	/**
 	 * Sends request to ARES API
-	 * The new API is REST from 2023
+	 * 
+	 *  The new API is REST from 2023
 	 *
 	 * @author Michal Kliment & Lukáš Dulík
 	 * @param type $type
@@ -1902,14 +1903,15 @@ class Json_Controller extends Controller
 		}
 		return $result;
 	}
-
+	
 	/**
 	 * Loads data about member from ARES
-	 *
+	 * 
 	 * @author Michal Kliment
 	 */
 	public function load_member_data_from_ares()
 	{
+		
 		$result = array
 		(
 			'state' => 0,
@@ -1993,23 +1995,21 @@ class Json_Controller extends Controller
 				}
 			}
 		}
-
-
 		// record was found
 		if ($result['state'])
 		{
 			$town_model = new Town_Model();
 			$street_model = new Street_Model();
-
+			
 			if ($result['quarter'] == $result['town'] || $result['quarter'] == '')
 				$result['quarter'] = NULL;
-
+			
 			// if street is empty, use town as street
 			if ($result['street'] == '')
 			{
 				$result['street'] = ($result['quarter'] !== NULL) ? $result['quarter'] : $result['town'];
 			}
-
+			
 			// try find town in db
 			$town = $town_model->where(array
 			(
@@ -2017,7 +2017,7 @@ class Json_Controller extends Controller
 				'zip_code'	=> $result['zip_code'],
 				'quarter'	=> $result['quarter']
 			))->find();
-
+			
 			// not exist, create it
 			if (!$town->id && $result['town'] != '')
 			{
@@ -2035,18 +2035,18 @@ class Json_Controller extends Controller
 				{
 					$town->transaction_rollback();
 				}
-
+				
 			}
-
+			
 			$result['town_id'] = $town->id;
-
+			
 			// try find street in db
 			$street = $street_model->where(array
 			(
 				'town_id'	=> $result['town_id'],
 				'street'	=> $result['street']
 			))->find();
-
+			
 			// not exist, create it
 			if (!$street->id && $result['street'] != '')
 			{
@@ -2063,21 +2063,20 @@ class Json_Controller extends Controller
 				{
 					$street->transaction_rollback();
 				}
-
+				
 			}
-
+			
 			$result['street_id'] = $street->id;
-
+			
 			if ($result['street_number'] == '' && $result['other_street_number'] != '')
 				$result['street_number'] = $result['other_street_number'];
-
+			
 			// unset useless variables
 			unset($result['quarter']);
 			unset($result['ns']);
 			unset($result['data']);
 		}
-
-		// send json response
+		
 		die(json_encode($result));
 	}
 }
